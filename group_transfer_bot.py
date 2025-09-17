@@ -448,10 +448,10 @@ class GroupTransferBot:
             for i, admin in enumerate(admins, 1):
                 username = admin['username'] or "N/A"
                 first_name = admin['first_name'] or "N/A"
-                text += f"**{i}.** `{admin['user_id']}`\n"
-                text += f"   📝 @{username}\n"
-                text += f"   👤 {first_name}\n"
-                text += f"   📅 {admin['added_at']}\n\n"
+                text += f"{i}. User ID: `{admin['user_id']}`\n"
+                text += f"   Username: @{username}\n"
+                text += f"   Name: {first_name}\n"
+                text += f"   Added: {admin['added_at']}\n\n"
                 
             await message.reply(text, parse_mode="Markdown")
             
