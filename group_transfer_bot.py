@@ -305,7 +305,6 @@ class GroupTransferBot:
                 reply_markup=self.transfer_control_keyboard(),
                 parse_mode="Markdown"
             )
-            await state.clear()
             
         @self.dp.callback_query(F.data == "done_setup")
         async def done_setup_callback(callback: CallbackQuery, state: FSMContext):
