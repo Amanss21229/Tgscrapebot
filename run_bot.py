@@ -25,8 +25,15 @@ WEBHOOK_PATH = f"/webhook/{BOT_TOKEN}"
 WEBHOOK_URL = WEBHOOK_BASE.rstrip("/") + WEBHOOK_PATH
 
 # Setup bot & dispatcher
-bot = Bot(token=BOT_TOKEN, parse_mode="HTML")
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+
+bot = Bot(
+    token=BOT_TOKEN,
+    default=DefaultBotProperties(parse_mode="HTML")
+)
 dp = Dispatcher()
+
 
 # Import and register your handlers here (must register onto 'dp')
 # Example: if your group_transfer_bot.py exposes a function to register handlers:
