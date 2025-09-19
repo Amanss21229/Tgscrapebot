@@ -308,35 +308,35 @@ class GroupTransferBot:
             
         @self.dp.callback_query(F.data == "done_setup")
         async def done_setup_callback(callback: CallbackQuery, state: FSMContext):
-    """Handle Done button click — start transfer if both ids exist"""
-    await callback.answer()  # acknowledge click (non-alert)
+        """Handle Done button click — start transfer if both ids exist"""
+            await callback.answer()  # acknowledge click (non-alert)
 
-    data = await state.get_data()
-    source_id = data.get("source_chat_id")
-    target_id = data.get("target_chat_id")
-    admin_id = data.get("admin_id")  # if you're saving admin earlier
+            data = await state.get_data()
+            source_id = data.get("source_chat_id")
+            target_id = data.get("target_chat_id")
+            admin_id = data.get("admin_id")  # if you're saving admin earlier
 
-    if not source_id or not target_id:
-        await callback.answer("❌ Please set both SOURCE and TARGET group IDs first!", show_alert=True)
-        return
+            if not source_id or not target_id:
+            await callback.answer("❌ Please set both SOURCE and TARGET group IDs first!", show_alert=True)
+            return
 
-    # Edit message so user knows transfer started
-    if callback.message:
-        await callback.message.edit_text(
-            "🚀 Starting Member Transfer...\n\n"
-            f"From: `{source_id}`\nTo: `{target_id}`\n\n"
-            "Check logs for progress.",
-            parse_mode="Markdown"
-        )
+          # Edit message so user knows transfer started
+          if callback.message:
+              await callback.message.edit_text(
+              "🚀 Starting Member Transfer...\n\n"
+              f"From: `{source_id}`\nTo: `{target_id}`\n\n"
+              "Check logs for progress.",
+              parse_mode="Markdown"
+              )
 
-    # Start the transfer in background so the request returns quickly
-    # ensure transfer_members is the function that does the heavy work
-    task = asyncio.create_task(
-        self.transfer_members(source_id, target_id, callback.message.chat.id, admin_id)
-    )
+            # Start the transfer in background so the request returns quickly
+            # ensure transfer_members is the function that does the heavy work
+            task = asyncio.create_task(
+            self.transfer_members(source_id, target_id, callback.message.chat.id, admin_id)
+          )
 
-    # NOW clear the state (safe: transfer already started)
-    await state.clear()
+          # NOW clear the state (safe: transfer already started)
+            await state.clear()
            
         @self.dp.message(Command("promote"))
         async def promote_command(message: Message):
