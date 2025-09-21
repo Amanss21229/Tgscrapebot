@@ -277,47 +277,57 @@ class GroupTransferBot:
             if not message.text:
                 return
                 
+            # Read existing FSM data (if any)
             data = await state.get_data()
+
+            # Save source chat id (do not clear state here)
             data['source_chat_id'] = message.text.strip()
             await state.set_data(data)
-            
+
             await message.reply(
                 f"✅ Source set to: `{message.text.strip()}`\n\n"
                 "Now configure the target using the buttons above.",
                 reply_markup=self.transfer_control_keyboard(),
                 parse_mode="Markdown"
             )
-            await state.clear()
+
+            # DO NOT clear the FSM here — wait until transfer starts (Done is pressed)
+
             
         @self.dp.message(TransferStates.waiting_target_id)
         async def handle_target_id(message: Message, state: FSMContext):
             """Handle target chat ID input"""
             if not message.text:
                 return
-                
+
             data = await state.get_data()
             data['target_chat_id'] = message.text.strip()
             await state.set_data(data)
-            
+
             await message.reply(
                 f"✅ Target set to: `{message.text.strip()}`\n\n"
                 "Click Done when ready to start the transfer.",
                 reply_markup=self.transfer_control_keyboard(),
                 parse_mode="Markdown"
             )
+
+            # Do NOT clear state here either — Done should clear it after starting transfer
+
             
         @self.dp.callback_query(F.data == "done_setup")
         async def done_setup_callback(callback: CallbackQuery, state: FSMContext):
             """Handle done setup button"""
             if not callback.message:
                 return
-                
+
+            # Read FSM data (should contain source_chat_id, target_chat_id, admin_id)
             data = await state.get_data()
-            
+            logger.info("DEBUG: FSM data at Done click: %s", data)
+
             if not data.get('source_chat_id') or not data.get('target_chat_id'):
                 await callback.answer("❌ Please set both source and target groups first!", show_alert=True)
                 return
-                
+
             await callback.message.edit_text(
                 "🚀 Starting Member Transfer\n\n"
                 f"From: {data['source_chat_id']}\n"
@@ -325,19 +335,23 @@ class GroupTransferBot:
                 "⏳ Initializing transfer... This may take 5-10 minutes.",
                 parse_mode="Markdown"
             )
-            
-            # Start transfer task
+
+            # Start transfer task in background so UI returns immediately
             task = asyncio.create_task(
                 self.transfer_members(
-                    data['source_chat_id'], 
-                    data['target_chat_id'], 
+                    data['source_chat_id'],
+                    data['target_chat_id'],
                     callback.message.chat.id,
-                    data['admin_id']
+                    data.get('admin_id')
                 )
             )
-            
+
+            # Save task reference so you can cancel / monitor it
             self.transfer_tasks[callback.message.chat.id] = task
+
             await callback.answer()
+
+            # NOW clear the FSM state because transfer is running
             await state.clear()
            
         @self.dp.message(Command("promote"))
